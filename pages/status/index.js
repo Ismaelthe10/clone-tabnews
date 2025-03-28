@@ -30,7 +30,6 @@ function UpdatedAt() {
       <ul>
         <li>Última atualização: {updatedAtText}</li>
       </ul>
-      ;
     </>
   );
 }
@@ -40,6 +39,7 @@ function DatabaseStatus() {
     refreshInterval: 2000,
   });
   let DatabaseInfo = "Carregando...";
+
   if (!isLoading && data) {
     DatabaseInfo = (
       <>
@@ -55,6 +55,6 @@ function DatabaseStatus() {
         </ul>
       </>
     );
-    return DatabaseInfo;
   }
+  return DatabaseInfo;
 }
