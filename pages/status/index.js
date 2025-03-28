@@ -55,6 +55,6 @@ function DatabaseStatus() {
         </ul>
       </>
     );
+    return DatabaseInfo;
   }
-  return DatabaseInfo;
 }
