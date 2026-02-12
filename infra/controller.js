@@ -61,7 +61,7 @@ async function clearSessionCookie(response) {
   response.setHeader("Set-Cookie", setCookie);
 }
 async function injectAnonymousOrUser(request, response, next) {
-  if (request.cookie?.session_id) {
+  if (request.cookies?.session_id) {
     await injectAuthenticatedUser(request);
     return next();
   }
@@ -103,13 +103,13 @@ function canRequest(feature) {
   };
 }
 const controller = {
-  canRequest,
-  injectAnonymousOrUser,
-  setSessionCookie,
-  clearSessionCookie,
   errorHandlers: {
     onNoMatch: onNoMatchHandler,
     onError: onErrorHandler,
   },
+  setSessionCookie,
+  clearSessionCookie,
+  injectAnonymousOrUser,
+  canRequest,
 };
 export default controller;
