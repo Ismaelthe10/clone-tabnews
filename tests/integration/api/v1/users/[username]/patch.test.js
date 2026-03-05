@@ -2,7 +2,6 @@ import orchestrator from "tests/orchestrator.js";
 import { version as uuidVersion } from "uuid";
 import user from "models/user.js";
 import password from "models/password.js";
-import session from "models/session";
 beforeAll(async () => {
   await orchestrator.waitForAllServices();
   await orchestrator.clearDatabase();
@@ -65,6 +64,7 @@ describe("PATCH /api/v1/users/[username]", () => {
         status_code: 404,
       });
     });
+
     test("With duplicated 'username'", async () => {
       await orchestrator.createUser({
         username: "user1",
@@ -99,6 +99,43 @@ describe("PATCH /api/v1/users/[username]", () => {
         status_code: 400,
       });
     });
+
+    test("With `userB` targeting `userA`", async () => {
+      await orchestrator.createUser({
+        username: "userA",
+      });
+      const createdUserB = await orchestrator.createUser({
+        username: "userB",
+      });
+
+      const activatedUserB = await orchestrator.activateUser(createdUserB);
+      const sessionObject2 = await orchestrator.createSession(
+        activatedUserB.id,
+      );
+
+      const response = await fetch("http://localhost:3000/api/v1/users/userA", {
+        method: "PATCH",
+        headers: {
+          "Content-Type": "application/json",
+          Cookie: `session_id=${sessionObject2.token}`,
+        },
+        body: JSON.stringify({
+          username: "userC",
+        }),
+      });
+      expect(response.status).toBe(403);
+
+      const responseBody = await response.json();
+
+      expect(responseBody).toEqual({
+        action:
+          "verifique se você possui a feature necessária para atualizar outro usuário.",
+        message: "Você não possui permissão para atualizar outro usuário.",
+        name: "ForbiddenError",
+        status_code: 403,
+      });
+    });
+
     test("With duplicated 'email'", async () => {
       await orchestrator.createUser({
         email: "email1@gmail.com",
@@ -135,6 +172,7 @@ describe("PATCH /api/v1/users/[username]", () => {
         status_code: 400,
       });
     });
+
     test("With unique 'username'", async () => {
       const createdUser = await orchestrator.createUser();
       const activatedUser = await orchestrator.activateUser(createdUser);
