@@ -100,7 +100,7 @@ async function activateUserByUserId(userId) {
 }
 async function sendEmailToUser(user, activationToken) {
   await email.send({
-    from: "Ismael <ismael-dev@outlook.com>",
+    from: "Ismael <ismael-dev@ismael-dev.com.br>",
     to: user.email,
     subject: "Ative seu cadastro!",
     text: `${user.username},clique no link abaixo para ativar sua conta!

@@ -2,6 +2,7 @@ import orchestrator from "tests/orchestrator.js";
 import { version as uuidVersion } from "uuid";
 import session from "models/session.js";
 import setCookieParser from "set-cookie-parser";
+import webserver from "infra/webserver.js";
 
 beforeAll(async () => {
   await orchestrator.waitForAllServices();
@@ -12,7 +13,7 @@ beforeAll(async () => {
 describe("GET /api/v1/user", () => {
   describe("Anonymous user", () => {
     test("Retrieving the endpoint", async () => {
-      const response = await fetch("http://localhost:3000/api/v1/user");
+      const response = await fetch(`${webserver.origin}/api/v1/user`);
 
       expect(response.status).toBe(403);
 
@@ -33,9 +34,9 @@ describe("GET /api/v1/user", () => {
       });
 
       const activatedUser = await orchestrator.activateUser(createdUser);
-      const sessionObject = await orchestrator.createSession(createdUser.id);
+      const sessionObject = await orchestrator.createSession(createdUser);
 
-      const response = await fetch("http://localhost:3000/api/v1/user", {
+      const response = await fetch(`${webserver.origin}/api/v1/user`, {
         headers: {
           cookie: `session_id=${sessionObject.token}`,
         },
@@ -82,9 +83,10 @@ describe("GET /api/v1/user", () => {
       expect(parsedSetCookie.session_id).toEqual({
         name: "session_id",
         value: sessionObject.token,
-        maxAge: session.EXPIRANTION_IN_MILLISECONDS / 1000,
+        maxAge: session.EXPIRATION_IN_MILLISECONDS / 1000,
         path: "/",
         httpOnly: true,
+        sameSite: "Lax",
       });
     });
 
@@ -92,7 +94,7 @@ describe("GET /api/v1/user", () => {
       const nonexistentToken =
         "72704a4200f67c7dbb14710c95e72342c085494b8ac2f5eddfa2a24a7f75d3d3e3c849e836e6e87382c8c7eed0b063f0";
 
-      const response = await fetch("http://localhost:3000/api/v1/user", {
+      const response = await fetch(`${webserver.origin}/api/v1/user`, {
         headers: {
           cookie: `session_id=${nonexistentToken}`,
         },
@@ -123,17 +125,17 @@ describe("GET /api/v1/user", () => {
 
     test("With expired session", async () => {
       jest.useFakeTimers({
-        now: new Date(Date.now() - session.EXPIRANTION_IN_MILLISECONDS),
+        now: new Date(Date.now() - session.EXPIRATION_IN_MILLISECONDS),
       });
 
       const createdUser = await orchestrator.createUser({
         username: "UserWithExpiredSession",
       });
 
-      const sessionObject = await orchestrator.createSession(createdUser.id);
+      const sessionObject = await orchestrator.createSession(createdUser);
       jest.useRealTimers();
 
-      const response = await fetch("http://localhost:3000/api/v1/user", {
+      const response = await fetch(`${webserver.origin}/api/v1/user`, {
         headers: {
           Cookie: `session_id=${sessionObject.token}`,
         },
@@ -163,7 +165,7 @@ describe("GET /api/v1/user", () => {
 
     test("with almost expired session", async () => {
       jest.useFakeTimers({
-        now: new Date(Date.now() - session.EXPIRANTION_IN_MILLISECONDS + 3000),
+        now: new Date(Date.now() - session.EXPIRATION_IN_MILLISECONDS + 3000),
       });
 
       const createdUser = await orchestrator.createUser({
@@ -171,10 +173,10 @@ describe("GET /api/v1/user", () => {
       });
 
       const activatedUser = await orchestrator.activateUser(createdUser);
-      const sessionObject = await orchestrator.createSession(createdUser.id);
+      const sessionObject = await orchestrator.createSession(createdUser);
       jest.useRealTimers();
 
-      const response = await fetch("http://localhost:3000/api/v1/user", {
+      const response = await fetch(`${webserver.origin}/api/v1/user`, {
         headers: {
           Cookie: `session_id=${sessionObject.token}`,
         },
@@ -213,9 +215,10 @@ describe("GET /api/v1/user", () => {
       expect(parsedSetCookie.session_id).toEqual({
         name: "session_id",
         value: sessionObject.token,
-        maxAge: session.EXPIRANTION_IN_MILLISECONDS / 1000,
+        maxAge: session.EXPIRATION_IN_MILLISECONDS / 1000,
         path: "/",
         httpOnly: true,
+        sameSite: "Lax",
       });
     });
   });
